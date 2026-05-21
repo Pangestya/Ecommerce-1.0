@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-public function up()
-{
-    Schema::create('audit_logs', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Siapa pelakunya?
-        $table->string('action');      // CREATE, UPDATE, DELETE, LOGIN
-        $table->string('model_type');  // Produk, Kategori, User
-        $table->string('model_name');  // Nama itemnya (Misal: "Sepatu Nike")
-        $table->text('details')->nullable(); // Detail perubahan
-        $table->timestamps();
-    });
-}
+    public function up()
+    {
+        Schema::create('audit_logs', function (Blueprint $table) {
+            $table->ulid('id')->primary();
+            $table->foreignUlid('user_id')->constrained()->onDelete('cascade'); // Siapa pelakunya?
+            $table->string('action');      // CREATE, UPDATE, DELETE, LOGIN
+            $table->string('model_type');  // Produk, Kategori, User
+            $table->string('model_name');  // Nama itemnya (Misal: "Sepatu Nike")
+            $table->text('details')->nullable(); // Detail perubahan
+            $table->timestamps();
+        });
+    }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('audit_logs');

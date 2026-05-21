@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 class Review extends Model
 {
+    use HasUlids, HasFactory;
+
     protected $fillable = ['user_id', 'product_id', 'rating', 'comment'];
 
     public function user() { return $this->belongsTo(User::class); }

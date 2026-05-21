@@ -9,10 +9,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('alamats', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id')->primary();
             
             // Relasi ke User
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUlid('user_id')->constrained()->onDelete('cascade');
             
             // Info Penerima
             $table->string('name');         // Nama Penerima
@@ -30,7 +30,7 @@ return new class extends Migration
             
             // --- DATA MANUAL ---
             $table->string('postal_code')->nullable(); // Kode Pos
-            $table->text('detail_alamat');  // Jalan, RT/RW, No Rumah (Saya ganti jadi detail_alamat biar Indo banget)
+            $table->text('detail_alamat');  // Jalan, RT/RW, No Rumah
             
             // Penanda Alamat Utama
             $table->boolean('is_primary')->default(false);

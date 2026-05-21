@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasUlids, HasFactory;
 
     protected $fillable = [
         'user_id', 'updated_by','category_id',

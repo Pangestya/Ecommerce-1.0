@@ -6,17 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('products');
+            $table->ulid('id')->primary();
+            $table->foreignUlid('order_id')->constrained('orders')->onDelete('cascade');
+            $table->foreignUlid('product_id')->constrained('products');
             
-            // Snapshot Data (Penting! Agar kalau harga produk berubah, data histori order tidak ikut berubah)
+            // Snapshot Data 
             $table->string('product_name'); 
             $table->integer('quantity');
             $table->integer('price');       // Harga saat beli
@@ -26,9 +23,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('order_items');
