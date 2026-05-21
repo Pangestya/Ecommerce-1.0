@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\AuditLog; // <--- WAJIB
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +24,6 @@ class ProductController extends Controller
         return view('admin.products.create', compact('categories'));
     }
 
-    // --- 1. STORE (TAMBAH PRODUK DETAILED) ---
     public function store(Request $request)
     {
         $request->validate([
@@ -69,8 +68,6 @@ class ProductController extends Controller
             }
         }
 
-        // AUDIT TRAIL: CREATE
-        // Kita catat info vitalnya saja agar tidak kepanjangan
         $formattedPrice = number_format($product->price);
         AuditLog::create([
             'user_id'    => Auth::id(),
@@ -89,7 +86,6 @@ class ProductController extends Controller
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    // --- 2. UPDATE (EDIT PRODUK SUPER DETAIL) ---
     public function update(Request $request, Product $product)
     {
         $request->validate([
@@ -105,7 +101,6 @@ class ProductController extends Controller
             'gallery_images.*' => 'nullable|image|max:2048',
         ]);
 
-        // Assign data baru ke object (tanpa save dulu)
         $product->category_id = $request->category_id;
         $product->name        = $request->name;
         $product->description = $request->description;
@@ -119,7 +114,6 @@ class ProductController extends Controller
         $product->is_featured = $request->has('is_featured');
         $product->updated_by  = Auth::id();
 
-        // LOGIKA DETEKSI PERUBAHAN
         $changes = [];
         if ($product->isDirty()) {
             foreach ($product->getDirty() as $field => $newValue) {
@@ -133,7 +127,6 @@ class ProductController extends Controller
                     $newStatus = $newValue ? 'Ya' : 'Tidak';
                     $changes[] = "$fieldNameIndo: $oldStatus -> $newStatus";
                 } elseif ($field === 'category_id') {
-                    // Khusus kategori, kita ambil nama kategorinya biar enak dibaca
                     $oldCat = Category::find($oldValue)->name ?? '-';
                     $newCat = Category::find($newValue)->name ?? '-';
                     $changes[] = "Kategori: '$oldCat' -> '$newCat'";
@@ -162,7 +155,6 @@ class ProductController extends Controller
             $changes[] = "Tambah $count foto galeri";
         }
 
-        // AUDIT TRAIL: UPDATE
         if (count($changes) > 0) {
             AuditLog::create([
                 'user_id'    => Auth::id(),
@@ -176,31 +168,22 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui!');
     }
 
-    // --- 3. DESTROY (HAPUS PRODUK) ---
     public function destroy(Product $product)
     {
-        // Simpan info penting sebelum dihapus
         $deletedName = $product->name;
         $deletedStock = $product->stock;
 
-        // Hapus file fisik
-        if ($product->image) Storage::disk('public')->delete($product->image);
-        foreach($product->images as $img) {
-            Storage::disk('public')->delete($img->image_path);
-        }
-        
         $product->delete();
 
-        // AUDIT TRAIL: DELETE
         AuditLog::create([
             'user_id'    => Auth::id(),
             'action'     => 'DELETE',
             'model_type' => 'Produk',
             'model_name' => $deletedName,
-            'details'    => "Menghapus produk '{$deletedName}' (Sisa Stok: {$deletedStock}) dari database.",
+            'details'    => "Menyembunyikan produk '{$deletedName}' (Sisa Stok: {$deletedStock}) ke keranjang sampah.",
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk dihapus!');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil disembunyikan / dihapus aman!');
     }
 
     public function toggleStatus(Product $product)
@@ -208,7 +191,6 @@ class ProductController extends Controller
         $product->is_active = !$product->is_active;
         $product->save();
         
-        // Audit Toggle
         $status = $product->is_active ? 'Aktif' : 'Non-Aktif';
         AuditLog::create([
             'user_id'    => Auth::id(),
@@ -224,15 +206,14 @@ class ProductController extends Controller
     public function destroyImage($id)
     {
         $image = \App\Models\ProductImage::findOrFail($id);
-        $productName = $image->product->name; // Ambil nama produknya dulu
+        $productName = $image->product->name; 
         
         Storage::disk('public')->delete($image->image_path);
         $image->delete();
 
-        // Audit Hapus Foto Galeri
         AuditLog::create([
             'user_id'    => Auth::id(),
-            'action'     => 'UPDATE', // Masuk kategori update produk
+            'action'     => 'UPDATE', 
             'model_type' => 'Produk',
             'model_name' => $productName,
             'details'    => "Menghapus 1 foto dari galeri",
@@ -241,7 +222,6 @@ class ProductController extends Controller
         return back()->with('success', 'Foto galeri dihapus.');
     }
 
-    // Helper Translate
     private function translateField($field)
     {
         $dictionary = [

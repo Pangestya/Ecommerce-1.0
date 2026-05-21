@@ -14,7 +14,8 @@ class OrderItem extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        // withTrashed() ini kunci biar nota tetap bisa narik gambar/data produk yang dihapus
+        return $this->belongsTo(Product::class)->withTrashed(); 
     }
     
     public function order()
